@@ -13,14 +13,18 @@ session.mount('https://', adapter)
 session.mount('https://', adapter)
 
 
+def to_route(title: str) -> str:
+    table = str.maketrans('', '', ":'")
+    modified_title = title.lower().translate(table).replace(' ', '-')
+    return modified_title
+
+
 def get_metascore(title: str, platform: PlatformType) -> int or None:
     if title is None:
         raise TypeError('title must be str')
 
-    table = str.maketrans('', '', ":'")
-    modified_title = title.lower().translate(table).replace(' ', '-')
-
-    url = f"https://www.metacritic.com/game/{platform.value}/{modified_title}"
+    title = to_route(title)
+    url = f"https://www.metacritic.com/game/{platform.value}/{title}"
 
     response = requests.get(url, headers=headers)
 
@@ -44,14 +48,13 @@ def get_metascore(title: str) -> float:
     if title is None:
         raise TypeError('title must be str')
 
-    table = str.maketrans('', '', ":'")
-    modified_title = title.lower().translate(table).replace(' ', '-')
+    title = to_route(title)
 
     scores = []
 
     for p in PlatformType:
         platform = p.value
-        url = f"https://www.metacritic.com/game/{platform}/{modified_title}"
+        url = f"https://www.metacritic.com/game/{platform}/{title}"
 
         # response = requests.get(url, headers=headers)
         response = session.get(url, headers=headers)
@@ -81,9 +84,9 @@ def get_user_score(title: str, platform: PlatformType):
     if title is None:
         raise TypeError('title must be str')
 
-    table = str.maketrans('', '', ":'")
-    modified_title = title.lower().translate(table).replace(' ', '-')
-    url = f"https://www.metacritic.com/game/{platform.value}/{modified_title}"
+    title = to_route(title)
+
+    url = f"https://www.metacritic.com/game/{platform.value}/{title}"
 
     response = session.get(url, headers=headers)
 
@@ -98,6 +101,22 @@ def get_user_score(title: str, platform: PlatformType):
     return float(element.text)
 
 
+def get_developer(title: str, platform: PlatformType) -> str:
+    title = to_route(title)
+    url = f"https://www.metacritic.com/game/{platform.value}/{title}"
+
+    response = session.get(url, headers=headers)
+
+    if not response.ok:
+        return None
+
+    html = response.text
+    soup = BeautifulSoup(html, features='html.parser')
+    element = soup.find('li', class_='developer').select_one('span.data > a')
+
+    return element.text
+
+
 if __name__ == '__main__':
     tlou2 = 'the last of us part ii'
-    print(get_user_score(tlou2, PlatformType.PS4))
+    print(get_developer(tlou2, PlatformType.PS4))
