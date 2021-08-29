@@ -5,7 +5,7 @@ from enum import unique
 @unique
 class PlatformType(Enum):
     PC = 'pc'
-    NS = 'switch'
+    SWITCH = 'switch'
     WII_U = 'wii-u'
     WII = 'wii'
     GAMECUBE = 'gamecube'
